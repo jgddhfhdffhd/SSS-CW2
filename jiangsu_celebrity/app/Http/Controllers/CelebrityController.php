@@ -19,19 +19,37 @@ class CelebrityController extends Controller
         return view('celebrity.create');
     }
 
-    public function store(Request $request)
+    public function store(Request $request, $id=null)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'image' => 'required|url',
-            'bio' => 'required|string|max:500',
-            'description' => 'required|string|max:1000',
+            'name' => 'required',
+            'image' => 'required',
+            'bio' => 'required',
+            'description' => 'required',
         ]);
 
-        Celebrity::create($validated);
 
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('celebrity', 'public'); // Save in storage/app/public/celebrity
+            $validated['image'] = $imagePath; // Save the path in the database
+        }
+
+        if ($id) {
+            // Find the existing record
+            $celebrity = Celebrity::findOrFail($id);
+            
+            // Update the existing record
+            $celebrity->update($validated);
+    
+            return redirect()->route('celebrity.index')->with('success', 'Celebrity updated successfully!');
+        }
+    
+        // Create a new record if no ID is provided
+        Celebrity::create($validated);
+    
         return redirect()->route('celebrity.index')->with('success', 'Celebrity added successfully!');
     }
+    
 
     public function show(Celebrity $celebrity)
     {
@@ -41,22 +59,22 @@ class CelebrityController extends Controller
     public function edit($id)
     {
         $celebrity = Celebrity::findOrFail($id);
-        return view('celebrity.edit', compact('celebrity'));
+        $celebrities = Celebrity::all();
+        return view('celebrity.index', compact('celebrities'));
     }
 
-    public function update(Request $request, Celebrity $celebrity)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'image' => 'required|url',
-            'bio' => 'required|string|max:500',
-            'description' => 'required|string|max:1000',
-        ]);
+    // public function update(Request $request, Celebrity $celebrity)
+    // {
+    //     $validated = $request->validate([
+    //         'name' => 'required',
+    //         'image' => 'required',
+    //         'bio' => 'required',
+    //         'description' => 'required',
+    //     ]);
+    //     $celebrity->update($validated);
 
-        $celebrity->update($validated);
-
-        return redirect()->route('celebrity.index')->with('success', 'Celebrity updated successfully!');
-    }
+    //     return redirect()->route('celebrity.index')->with('success', 'Celebrity updated successfully!');
+    // }
 
     public function destroy($id)
     {

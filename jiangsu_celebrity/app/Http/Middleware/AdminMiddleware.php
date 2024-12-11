@@ -4,7 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-
+use Symfony\Component\HttpFoundation\Response;
 class AdminMiddleware
 {
     /**
@@ -14,10 +14,10 @@ class AdminMiddleware
      * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
      * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
         if (!auth()->check() || !auth()->user()->is_admin) {
-            return redirect()->route('login');  // or 403 if you want to restrict access
+            abort(Response::HTTP_FORBIDDEN, 'Access denied. Admins only.');
         }
 
         return $next($request);
